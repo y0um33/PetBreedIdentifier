@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>Pet Breed Identifier</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Pet Breed Identifier</h1>
+
+    <p class="warning">
+        Results are estimates only and should not be considered
+        professional identification.
+    </p>
+
+    <input
+        id="fileInput"
+        type="file"
+        accept="image/*">
+
+    <img
+        id="preview"
+        class="preview"
+        alt="Selected image preview"
+        style="display:none;">
+
+    <button id="analyzeBtn">
+        Analyze
+    </button>
+
+    <div id="status"></div>
+
+    <div id="results"></div>
+
+</div>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>
