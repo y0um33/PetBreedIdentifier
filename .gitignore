@@ -1,11 +1,13 @@
-__pycache__/
-*.pyc
+# GitHub runner
+actions-runner/
+*.runner
+
+# Logs
 *.log
 
-.vscode/
-.idea/
+# Python
+__pycache__/
+*.pyc
 
-.env
-
-*.pth
-*.pt
+# Docker
+docker-data/
