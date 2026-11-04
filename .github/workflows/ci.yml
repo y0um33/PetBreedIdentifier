@@ -8,9 +8,7 @@ on:
 
 jobs:
   docker:
-    runs-on:
-      self-hosted
-      windows
+    runs-on: self-hosted
 
     permissions:
       contents: read
