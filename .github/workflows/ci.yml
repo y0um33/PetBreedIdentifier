@@ -8,7 +8,9 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on:
+      self-hosted
+      windows
 
     permissions:
       contents: read
