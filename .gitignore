@@ -1,0 +1,13 @@
+# GitHub runner
+actions-runner/
+*.runner
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Docker
+docker-data/

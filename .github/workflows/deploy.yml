@@ -1,0 +1,83 @@
+name: Deploy From Docker Hub
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: [self-hosted, windows, x64]
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull Image From Successful Build
+        shell: powershell
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/petbreed:${{ github.event.workflow_run.head_sha }}
+        run: |
+          docker pull $env:IMAGE
+
+      - name: Replace Container
+        shell: powershell
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/petbreed:${{ github.event.workflow_run.head_sha }}
+        run: |
+          docker container inspect petbreed *> $null
+          if ($LASTEXITCODE -eq 0) {
+            docker rm --force petbreed
+            if ($LASTEXITCODE -ne 0) {
+              throw 'Could not remove the existing petbreed container.'
+            }
+          }
+          docker run -d `
+            --restart unless-stopped `
+            --name petbreed `
+            -p 8000:8000 `
+            $env:IMAGE
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Could not start the new petbreed container.'
+          }
+
+      - name: Verify Service
+        shell: powershell
+        env:
+          SERVICE_URL: http://localhost:8000/
+        run: |
+          $deadline = (Get-Date).AddMinutes(3)
+          do {
+            try {
+              $response = Invoke-WebRequest -Uri $env:SERVICE_URL -UseBasicParsing -TimeoutSec 5
+              if ($response.StatusCode -eq 200) {
+                Write-Host "PetBreed is responding at $env:SERVICE_URL"
+                exit 0
+              }
+            } catch {
+              Write-Host "Waiting for PetBreed: $($_.Exception.Message)"
+            }
+            Start-Sleep -Seconds 5
+          } while ((Get-Date) -lt $deadline)
+
+          throw "PetBreed did not become available at $env:SERVICE_URL within three minutes."
+
+      - name: Collect Container Diagnostics
+        if: failure()
+        shell: powershell
+        run: |
+          docker ps -a
+          docker container inspect petbreed *> $null
+          if ($LASTEXITCODE -eq 0) {
+            docker logs --tail 200 petbreed
+          } else {
+            Write-Host 'The petbreed container was not created.'
+          }
